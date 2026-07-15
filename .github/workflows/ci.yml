@@ -1,74 +1,85 @@
-name: AI Task Platform CI
+name: AI Task Platform CI/CD
 
 on:
   push:
     branches:
       - main
 
-  pull_request:
-    branches:
-      - main
-
 jobs:
-  backend:
-    name: Backend
+  build-and-push:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      # --------------------
+      # Backend
+      # --------------------
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install Backend Dependencies
         working-directory: backend
+        run: npm ci
 
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Dependencies
-        run: npm install
-
-  frontend:
-    name: Frontend
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
+      # --------------------
+      # Frontend
+      # --------------------
+      - name: Install Frontend Dependencies
         working-directory: frontend
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Install Dependencies
-        run: npm install
+        run: npm ci
 
       - name: Build Frontend
+        working-directory: frontend
         run: npm run build
 
-  worker:
-    name: Worker
-    runs-on: ubuntu-latest
-
-    defaults:
-      run:
-        working-directory: worker
-
-    steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
-
+      # --------------------
+      # Worker
+      # --------------------
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      - name: Install Dependencies
+      - name: Install Worker Dependencies
+        working-directory: worker
         run: pip install -r requirements.txt
+
+      # --------------------
+      # Docker Login
+      # --------------------
+      - name: Login to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKER_USERNAME }}
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      # --------------------
+      # Backend Image
+      # --------------------
+      - name: Build Backend Image
+        run: docker build -t tanvi005/ai-task-platform-backend:latest ./backend
+
+      - name: Push Backend Image
+        run: docker push tanvi005/ai-task-platform-backend:latest
+
+      # --------------------
+      # Frontend Image
+      # --------------------
+      - name: Build Frontend Image
+        run: docker build -t tanvi005/ai-task-platform-frontend:latest ./frontend
+
+      - name: Push Frontend Image
+        run: docker push tanvi005/ai-task-platform-frontend:latest
+
+      # --------------------
+      # Worker Image
+      # --------------------
+      - name: Build Worker Image
+        run: docker build -t tanvi005/ai-task-platform-worker:latest ./worker
+
+      - name: Push Worker Image
+        run: docker push tanvi005/ai-task-platform-worker:latest
