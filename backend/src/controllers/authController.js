@@ -2,19 +2,19 @@ import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 
+// ==========================
 // Register User
+// ==========================
 export const register = async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
-    // Validate input
     if (!name || !email || !password) {
       return res.status(400).json({
         message: "All fields are required",
       });
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({
       email: email.toLowerCase(),
     });
@@ -25,17 +25,15 @@ export const register = async (req, res) => {
       });
     }
 
-    // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user
     const user = await User.create({
       name,
       email: email.toLowerCase(),
       password: hashedPassword,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "User registered successfully",
       user: {
         id: user._id,
@@ -43,28 +41,32 @@ export const register = async (req, res) => {
         email: user.email,
       },
     });
-  } catch (error) {
-    console.error(error);
 
-    res.status(500).json({
-      message: "Internal Server Error",
+  } catch (error) {
+    console.error("========== REGISTER ERROR ==========");
+    console.error(error);
+    console.error("===================================");
+
+    return res.status(500).json({
+      message: error.message,
+      stack: error.stack,
     });
   }
 };
 
+// ==========================
 // Login User
+// ==========================
 export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
     if (!email || !password) {
       return res.status(400).json({
         message: "Email and password are required",
       });
     }
 
-    // Find user
     const user = await User.findOne({
       email: email.toLowerCase(),
     });
@@ -75,7 +77,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Compare passwords
     const isPasswordCorrect = await bcrypt.compare(
       password,
       user.password
@@ -87,7 +88,6 @@ export const login = async (req, res) => {
       });
     }
 
-    // Generate JWT
     const token = jwt.sign(
       {
         id: user._id,
@@ -99,7 +99,7 @@ export const login = async (req, res) => {
       }
     );
 
-    res.status(200).json({
+    return res.status(200).json({
       message: "Login successful",
       token,
       user: {
@@ -108,11 +108,15 @@ export const login = async (req, res) => {
         email: user.email,
       },
     });
-  } catch (error) {
-    console.error(error);
 
-    res.status(500).json({
-      message: "Internal Server Error",
+  } catch (error) {
+    console.error("========== LOGIN ERROR ==========");
+    console.error(error);
+    console.error("================================");
+
+    return res.status(500).json({
+      message: error.message,
+      stack: error.stack,
     });
   }
 };
