@@ -170,4 +170,3 @@ GET /api/tasks/:id
 
 B.Tech Computer Science Engineering
 
-Bennett University
