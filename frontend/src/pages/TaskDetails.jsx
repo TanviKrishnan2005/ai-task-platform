@@ -1,6 +1,17 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import {
+  ArrowLeft,
+  Clock3,
+  Loader2,
+  CheckCircle2,
+  XCircle,
+} from "lucide-react";
+
 import api from "../api/axios";
+
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 
 export default function TaskDetails() {
   const { id } = useParams();
@@ -25,127 +36,170 @@ export default function TaskDetails() {
     }
   }
 
-  function statusColor(status) {
+  function badge(status) {
     switch (status) {
       case "Success":
         return "bg-green-600";
       case "Running":
-        return "bg-yellow-500 text-black";
-      case "Pending":
         return "bg-blue-600";
+      case "Pending":
+        return "bg-amber-500 text-black";
       case "Failed":
         return "bg-red-600";
       default:
-        return "bg-gray-600";
+        return "bg-slate-700";
+    }
+  }
+
+  function icon(status) {
+    switch (status) {
+      case "Success":
+        return <CheckCircle2 className="text-green-400" size={20} />;
+      case "Running":
+        return (
+          <Loader2
+            className="text-blue-400 animate-spin"
+            size={20}
+          />
+        );
+      case "Pending":
+        return <Clock3 className="text-amber-400" size={20} />;
+      case "Failed":
+        return <XCircle className="text-red-400" size={20} />;
+      default:
+        return null;
     }
   }
 
   if (!task) {
     return (
-      <div className="min-h-screen bg-slate-950 flex justify-center items-center text-white">
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center text-white">
         Loading...
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white p-8">
+    <div className="min-h-screen bg-slate-950 text-white">
 
-      <button
-        onClick={() => navigate("/dashboard")}
-        className="mb-6 bg-slate-700 hover:bg-slate-600 px-4 py-2 rounded-lg"
-      >
-        ← Back
-      </button>
+      <div className="max-w-5xl mx-auto px-6 py-10">
 
-      <div className="bg-slate-900 rounded-xl p-8 space-y-6">
+        <Button
+          onClick={() => navigate("/dashboard")}
+          className="bg-slate-700 hover:bg-slate-600 mb-8"
+        >
+          <ArrowLeft className="mr-2 h-4 w-4" />
+          Back to Dashboard
+        </Button>
 
-        <div>
+        <Card className="bg-slate-900 border-slate-800 text-white">
 
-          <h1 className="text-3xl font-bold">
-            {task.title}
-          </h1>
+          <CardContent className="p-8">
 
-          <span
-            className={`inline-block mt-3 px-3 py-1 rounded-full ${statusColor(task.status)}`}
-          >
-            {task.status}
-          </span>
+            <h1 className="text-4xl font-bold mb-3">
+              {task.title}
+            </h1>
 
-        </div>
+            <div className="flex items-center gap-3 mb-8">
 
-        <div>
+              {icon(task.status)}
 
-          <h2 className="text-lg font-semibold mb-2">
-            Operation
-          </h2>
+              <span
+                className={`px-4 py-2 rounded-full text-sm font-medium ${badge(
+                  task.status
+                )}`}
+              >
+                {task.status}
+              </span>
 
-          <p className="capitalize">
-            {task.operation}
-          </p>
+            </div>
 
-        </div>
+            <div className="space-y-8">
 
-        <div>
+              <div>
 
-          <h2 className="text-lg font-semibold mb-2">
-            Input
-          </h2>
+                <h3 className="text-lg font-semibold mb-3">
+                  Operation
+                </h3>
 
-          <div className="bg-slate-800 p-4 rounded-lg whitespace-pre-wrap">
-            {task.inputText}
-          </div>
-
-        </div>
-
-        <div>
-
-          <h2 className="text-lg font-semibold mb-2">
-            Result
-          </h2>
-
-          <div className="bg-slate-800 p-4 rounded-lg whitespace-pre-wrap">
-            {task.result || "No Result Yet"}
-          </div>
-
-        </div>
-
-        <div>
-
-          <h2 className="text-lg font-semibold mb-4">
-            Execution Logs
-          </h2>
-
-          <div className="space-y-3">
-
-            {task.logs.length === 0 ? (
-
-              <p className="text-slate-400">
-                No Logs
-              </p>
-
-            ) : (
-
-              task.logs.map((log, index) => (
-
-                <div
-                  key={index}
-                  className="bg-slate-800 p-3 rounded-lg"
-                >
-                  <p>{log.message}</p>
-
-                  <p className="text-sm text-slate-400 mt-1">
-                    {new Date(log.timestamp).toLocaleString()}
-                  </p>
+                <div className="bg-slate-800 rounded-lg p-4 capitalize">
+                  {task.operation}
                 </div>
 
-              ))
+              </div>
 
-            )}
+              <div>
 
-          </div>
+                <h3 className="text-lg font-semibold mb-3">
+                  Input Text
+                </h3>
 
-        </div>
+                <div className="bg-slate-800 rounded-lg p-4 whitespace-pre-wrap min-h-[140px]">
+                  {task.inputText}
+                </div>
+
+              </div>
+
+              <div>
+
+                <h3 className="text-lg font-semibold mb-3">
+                  Result
+                </h3>
+
+                <div className="bg-slate-800 rounded-lg p-4 whitespace-pre-wrap min-h-[140px]">
+                  {task.result || "Waiting for worker..."}
+                </div>
+
+              </div>
+
+              <div>
+
+                <h3 className="text-lg font-semibold mb-4">
+                  Execution Logs
+                </h3>
+
+                {task.logs.length === 0 ? (
+
+                  <div className="bg-slate-800 rounded-lg p-4 text-slate-400">
+                    No logs yet.
+                  </div>
+
+                ) : (
+
+                  <div className="space-y-3">
+
+                    {task.logs.map((log, index) => (
+
+                      <div
+                        key={index}
+                        className="bg-slate-800 rounded-lg p-4"
+                      >
+
+                        <p className="font-medium">
+                          {log.message}
+                        </p>
+
+                        <p className="text-sm text-slate-400 mt-2">
+                          {new Date(
+                            log.timestamp
+                          ).toLocaleString()}
+                        </p>
+
+                      </div>
+
+                    ))}
+
+                  </div>
+
+                )}
+
+              </div>
+
+            </div>
+
+          </CardContent>
+
+        </Card>
 
       </div>
 
