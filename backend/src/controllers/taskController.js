@@ -1,7 +1,9 @@
 import Task from "../models/Task.js";
-import taskQueue from "../queue/taskQueue.js";
+import redis from "../queue/redis.js";
 
+// =======================
 // Create Task
+// =======================
 export const createTask = async (req, res) => {
   try {
     const { title, inputText, operation } = req.body;
@@ -17,14 +19,20 @@ export const createTask = async (req, res) => {
       inputText,
       operation,
       createdBy: req.user.id,
+      status: "Pending",
+      result: "",
+      logs: [],
     });
 
-    // Queue the task
-    await taskQueue.add("process-task", {
-      taskId: task._id.toString(),
-    });
+    // Push task into Redis queue
+    await redis.lpush(
+      "task-queue",
+      JSON.stringify({
+        taskId: task._id.toString(),
+      })
+    );
 
-    res.status(201).json({
+    return res.status(201).json({
       message: "Task created successfully",
       task,
     });
@@ -32,14 +40,15 @@ export const createTask = async (req, res) => {
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
 };
 
-
-// Get All Tasks of Logged-in User
+// =======================
+// Get All Tasks
+// =======================
 export const getTasks = async (req, res) => {
   try {
     const tasks = await Task.find({
@@ -48,17 +57,20 @@ export const getTasks = async (req, res) => {
       createdAt: -1,
     });
 
-    res.status(200).json(tasks);
+    return res.status(200).json(tasks);
+
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }
 };
 
+// =======================
 // Get Single Task
+// =======================
 export const getTaskById = async (req, res) => {
   try {
     const task = await Task.findOne({
@@ -72,11 +84,12 @@ export const getTaskById = async (req, res) => {
       });
     }
 
-    res.status(200).json(task);
+    return res.status(200).json(task);
+
   } catch (error) {
     console.error(error);
 
-    res.status(500).json({
+    return res.status(500).json({
       message: "Internal Server Error",
     });
   }

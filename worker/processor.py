@@ -1,20 +1,29 @@
-import sys
+def process_text(text, operation):
 
-operation = sys.argv[1]
-text = sys.argv[2]
+    if operation == "uppercase":
+        return text.upper()
 
-if operation == "uppercase":
-    print(text.upper())
+    elif operation == "lowercase":
+        return text.lower()
 
-elif operation == "lowercase":
-    print(text.lower())
+    elif operation == "reverse":
+        return text[::-1]
 
-elif operation == "reverse":
-    print(text[::-1])
+    elif operation == "wordcount":
+        return str(len(text.split()))
 
-elif operation == "wordcount":
-    print(len(text.split()))
+    else:
+        return "Invalid Operation"
 
-else:
-    print("Invalid Operation")
-    
+
+if __name__ == "__main__":
+    import sys
+
+    if len(sys.argv) < 3:
+        print("Usage: python processor.py <operation> <text>")
+        exit(1)
+
+    operation = sys.argv[1]
+    text = sys.argv[2]
+
+    print(process_text(text, operation))
